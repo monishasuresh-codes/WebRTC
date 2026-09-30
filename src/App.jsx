@@ -13,7 +13,7 @@ function App() {
 
   useEffect(() => {
     peerConnection.current = new RTCPeerConnection();
-    socket.current = io();
+    socket.current = io("https://webrtc-gkeo.onrender.com");
     socket.current.on("connect", () => {
       console.log(
         "Connected to server:",
