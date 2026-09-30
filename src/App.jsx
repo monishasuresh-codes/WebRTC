@@ -535,7 +535,6 @@ async function toggleScreenShare() {
 
   try {
     if (!screenSharing) {
-      // Start screen sharing
       const screenStream =
         await navigator.mediaDevices.getDisplayMedia({
           video: true
@@ -544,7 +543,6 @@ async function toggleScreenShare() {
       const screenTrack =
         screenStream.getVideoTracks()[0];
 
-      // Find the existing camera video sender
       const sender =
         peerConnection.current
           .getSenders()
@@ -554,12 +552,15 @@ async function toggleScreenShare() {
               sender.track.kind === "video"
           );
 
-      if (sender) {
-        // Replace camera video with screen video
-        await sender.replaceTrack(screenTrack);
+      if (!sender) {
+        console.log("Video sender not found");
+        return;
       }
 
-      // Show screen on local video
+      // Replace camera with screen
+      await sender.replaceTrack(screenTrack);
+
+      // Show screen locally
       if (videoRef.current) {
         videoRef.current.srcObject = screenStream;
       }
@@ -568,11 +569,14 @@ async function toggleScreenShare() {
 
       console.log("Screen sharing started");
 
-      // If user stops sharing using browser's "Stop sharing"
       screenTrack.onended = async () => {
         await stopScreenShare();
       };
+
+    } else {
+      await stopScreenShare();
     }
+
   } catch (error) {
     console.error("Screen sharing error:", error);
   }
@@ -596,12 +600,14 @@ async function stopScreenShare() {
             sender.track.kind === "video"
         );
 
-    if (sender && cameraTrack) {
-      // Replace screen with camera again
-      await sender.replaceTrack(cameraTrack);
+    if (!sender || !cameraTrack) {
+      return;
     }
 
-    // Show camera again locally
+    // Replace screen with camera
+    await sender.replaceTrack(cameraTrack);
+
+    // Show camera locally again
     if (videoRef.current) {
       videoRef.current.srcObject =
         localStream.current;
@@ -610,6 +616,7 @@ async function stopScreenShare() {
     setScreenSharing(false);
 
     console.log("Screen sharing stopped");
+
   } catch (error) {
     console.error(
       "Error stopping screen share:",
