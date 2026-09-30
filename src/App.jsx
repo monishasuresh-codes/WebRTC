@@ -19,6 +19,14 @@ function App() {
     }
   ]
 });
+peerConnection.current.oniceconnectionstatechange = () => {
+  console.log(
+    "ICE connection state:",
+    peerConnection.current.iceConnectionState
+  );
+};
+
+socket.current = io("https://webrtc-gkeo.onrender.com");
     socket.current = io("https://webrtc-gkeo.onrender.com");
     socket.current.on("connect", () => {
       console.log(
