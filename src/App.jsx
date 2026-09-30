@@ -14,6 +14,8 @@ function App() {
   const [joined, setJoined] = useState(false);
   const [micOn, setMicOn] = useState(true);
   const [remoteConnected, setRemoteConnected] = useState(false);
+  const [cameraOn, setCameraOn] = useState(true);
+  const [screenSharing, setScreenSharing] = useState(false);
 
   const roomIdRef = useRef("");
   const localStream = useRef(null);
@@ -503,6 +505,118 @@ function App() {
     );
 
   }
+
+  function toggleCamera() {
+  if (!localStream.current) {
+    return;
+  }
+
+  const videoTrack =
+    localStream.current.getVideoTracks()[0];
+
+  if (!videoTrack) {
+    return;
+  }
+
+  videoTrack.enabled = !videoTrack.enabled;
+
+  setCameraOn(videoTrack.enabled);
+
+  console.log(
+    videoTrack.enabled
+      ? "Camera ON"
+      : "Camera OFF"
+  );
+}
+async function toggleScreenShare() {
+  if (!localStream.current || !peerConnection.current) {
+    return;
+  }
+
+  try {
+    if (!screenSharing) {
+      // Start screen sharing
+      const screenStream =
+        await navigator.mediaDevices.getDisplayMedia({
+          video: true
+        });
+
+      const screenTrack =
+        screenStream.getVideoTracks()[0];
+
+      // Find the existing camera video sender
+      const sender =
+        peerConnection.current
+          .getSenders()
+          .find(
+            (sender) =>
+              sender.track &&
+              sender.track.kind === "video"
+          );
+
+      if (sender) {
+        // Replace camera video with screen video
+        await sender.replaceTrack(screenTrack);
+      }
+
+      // Show screen on local video
+      if (videoRef.current) {
+        videoRef.current.srcObject = screenStream;
+      }
+
+      setScreenSharing(true);
+
+      console.log("Screen sharing started");
+
+      // If user stops sharing using browser's "Stop sharing"
+      screenTrack.onended = async () => {
+        await stopScreenShare();
+      };
+    }
+  } catch (error) {
+    console.error("Screen sharing error:", error);
+  }
+}
+
+async function stopScreenShare() {
+  if (!localStream.current || !peerConnection.current) {
+    return;
+  }
+
+  try {
+    const cameraTrack =
+      localStream.current.getVideoTracks()[0];
+
+    const sender =
+      peerConnection.current
+        .getSenders()
+        .find(
+          (sender) =>
+            sender.track &&
+            sender.track.kind === "video"
+        );
+
+    if (sender && cameraTrack) {
+      // Replace screen with camera again
+      await sender.replaceTrack(cameraTrack);
+    }
+
+    // Show camera again locally
+    if (videoRef.current) {
+      videoRef.current.srcObject =
+        localStream.current;
+    }
+
+    setScreenSharing(false);
+
+    console.log("Screen sharing stopped");
+  } catch (error) {
+    console.error(
+      "Error stopping screen share:",
+      error
+    );
+  }
+}
 
 
   // =====================================================
@@ -1160,31 +1274,41 @@ function App() {
 
               {/* CAMERA */}
 
-              <button className="control-btn">
+              <button className="control-btn"
+              onClick={toggleCamera}>
 
                 <span className="control-icon">
-                  📹
+                  {cameraOn ? "📹" : "🚫"}
                 </span>
 
 
                 <span className="control-label">
-                  Camera
+                  {cameraOn
+                    ? "On"
+                    : "Off"}
                 </span>
 
               </button>
+              
 
 
               {/* SHARE */}
 
-              <button className="control-btn">
+              <button className="control-btn" onClick={
+    screenSharing
+      ? stopScreenShare
+      : toggleScreenShare
+  }>
 
                 <span className="control-icon">
-                  🖥️
+                  {screenSharing ? "🛑" : "🖥️"}
                 </span>
 
 
                 <span className="control-label">
-                  Share
+                  {screenSharing
+                    ? "Control-On"
+                    : "Off"}
                 </span>
 
               </button>
