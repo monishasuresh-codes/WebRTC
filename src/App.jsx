@@ -3,8 +3,10 @@ import { useRef, useEffect, useState } from 'react';
 import { io } from "socket.io-client";
 
 function App() {
+
   const videoRef = useRef(null);
   const remoteVideoRef = useRef(null);
+
   const peerConnection = useRef(null);
   const socket = useRef(null);
 
@@ -16,127 +18,204 @@ function App() {
   const roomIdRef = useRef("");
   const localStream = useRef(null);
 
+
+  // =====================================================
+  // WEBRTC + SOCKET CONNECTION
+  // =====================================================
+
   useEffect(() => {
 
-    // ================= PEER CONNECTION =================
+    // Create WebRTC connection
 
-    peerConnection.current = new RTCPeerConnection({
-      iceServers: [
-        {
-          urls: "stun:stun.l.google.com:19302"
-        }
-      ]
-    });
+    peerConnection.current =
+      new RTCPeerConnection({
+        iceServers: [
+          {
+            urls: "stun:stun.l.google.com:19302"
+          }
+        ]
+      });
 
-    // ================= ICE CONNECTION STATE =================
 
-    peerConnection.current.oniceconnectionstatechange = () => {
-      console.log(
-        "ICE connection state:",
-        peerConnection.current.iceConnectionState
-      );
-    };
+    // =================================================
+    // ICE CONNECTION STATE
+    // =================================================
 
-    // ================= SOCKET CONNECTION =================
+    peerConnection.current.oniceconnectionstatechange =
+      () => {
 
-    socket.current = io("https://webrtc-gkeo.onrender.com");
+        console.log(
+          "ICE connection state:",
+          peerConnection.current.iceConnectionState
+        );
+
+      };
+
+
+    // =================================================
+    // SOCKET.IO
+    // =================================================
+
+    socket.current =
+      io("https://webrtc-gkeo.onrender.com");
+
 
     socket.current.on("connect", () => {
+
       console.log(
         "Connected to server:",
         socket.current.id
       );
+
     });
 
-    // ================= REMOTE TRACK =================
 
-    peerConnection.current.ontrack = (event) => {
+    // =================================================
+    // REMOTE TRACK
+    // =================================================
 
-      console.log("Remote track received");
-
-      const remoteStream = event.streams[0];
-
-      console.log(
-        "Remote stream:",
-        remoteStream
-      );
-
-      console.log(
-        "Remote tracks:",
-        remoteStream.getTracks()
-      );
-
-      remoteStream.getTracks().forEach((track) => {
+    peerConnection.current.ontrack =
+      (event) => {
 
         console.log(
-          "Remote track:",
-          track.kind,
-          "readyState:",
-          track.readyState,
-          "enabled:",
-          track.enabled
+          "Remote track received"
         );
 
-      });
+        const remoteStream =
+          event.streams[0];
 
-      if (remoteVideoRef.current) {
+        if (!remoteStream) {
 
-        remoteVideoRef.current.srcObject =
-          remoteStream;
+          console.log(
+            "No remote stream found"
+          );
 
-        setRemoteConnected(true);
+          return;
+        }
 
-        remoteVideoRef.current
-          .play()
-          .then(() => {
+
+        console.log(
+          "Remote stream:",
+          remoteStream
+        );
+
+
+        console.log(
+          "Remote tracks:",
+          remoteStream.getTracks()
+        );
+
+
+        remoteStream
+          .getTracks()
+          .forEach((track) => {
 
             console.log(
-              "Remote video playing"
-            );
-
-            console.log(
-              "Video dimensions after play:",
-              remoteVideoRef.current.videoWidth,
-              remoteVideoRef.current.videoHeight
-            );
-
-          })
-          .catch((error) => {
-
-            console.error(
-              "Remote video play error:",
-              error
+              "Remote track:",
+              track.kind,
+              "readyState:",
+              track.readyState,
+              "enabled:",
+              track.enabled
             );
 
           });
 
-      }
 
-    };
+        // Make sure video element exists
+
+        if (!remoteVideoRef.current) {
+
+          console.log(
+            "Remote video element not available"
+          );
+
+          return;
+        }
 
 
-    // ================= ICE CANDIDATE =================
+        // Only assign the stream once
 
-    peerConnection.current.onicecandidate = (event) => {
+        if (
+          remoteVideoRef.current.srcObject !==
+          remoteStream
+        ) {
 
-      if (event.candidate) {
+          console.log(
+            "Setting remote stream"
+          );
+
+          remoteVideoRef.current.srcObject =
+            remoteStream;
+
+          setRemoteConnected(true);
+
+        }
+
+      };
+
+
+    // =================================================
+    // REMOTE VIDEO EVENTS
+    // =================================================
+
+    const checkRemoteVideo =
+      () => {
+
+        if (!remoteVideoRef.current) {
+          return;
+        }
 
         console.log(
-          "ICE candidate found"
+          "Remote video metadata loaded"
         );
 
-        socket.current.emit(
-          "ice-candidate",
-          event.candidate,
-          roomIdRef.current
+        console.log(
+          "Remote video dimensions:",
+          remoteVideoRef.current.videoWidth,
+          remoteVideoRef.current.videoHeight
         );
 
-      }
+        console.log(
+          "Remote video readyState:",
+          remoteVideoRef.current.readyState
+        );
 
-    };
+        console.log(
+          "Remote video paused:",
+          remoteVideoRef.current.paused
+        );
+
+      };
 
 
-    // ================= OFFER =================
+    // =================================================
+    // ICE CANDIDATES
+    // =================================================
+
+    peerConnection.current.onicecandidate =
+      (event) => {
+
+        if (event.candidate) {
+
+          console.log(
+            "ICE candidate found"
+          );
+
+          socket.current.emit(
+            "ice-candidate",
+            event.candidate,
+            roomIdRef.current
+          );
+
+        }
+
+      };
+
+
+    // =================================================
+    // OFFER
+    // =================================================
 
     socket.current.on(
       "offer",
@@ -146,28 +225,38 @@ function App() {
           "Offer received from another user"
         );
 
-        await peerConnection.current.setRemoteDescription(
-          offer
-        );
+
+        await peerConnection.current
+          .setRemoteDescription(
+            offer
+          );
+
 
         console.log(
           "Remote description set"
         );
 
+
         const answer =
-          await peerConnection.current.createAnswer();
+          await peerConnection.current
+            .createAnswer();
+
 
         console.log(
           "Answer created"
         );
 
-        await peerConnection.current.setLocalDescription(
-          answer
-        );
+
+        await peerConnection.current
+          .setLocalDescription(
+            answer
+          );
+
 
         console.log(
           "Local description set"
         );
+
 
         socket.current.emit(
           "answer",
@@ -179,7 +268,9 @@ function App() {
     );
 
 
-    // ================= ANSWER =================
+    // =================================================
+    // ANSWER
+    // =================================================
 
     socket.current.on(
       "answer",
@@ -189,14 +280,18 @@ function App() {
           "Answer received from another user"
         );
 
+
         if (
-          peerConnection.current.signalingState ===
+          peerConnection.current
+            .signalingState ===
           "have-local-offer"
         ) {
 
-          await peerConnection.current.setRemoteDescription(
-            answer
-          );
+          await peerConnection.current
+            .setRemoteDescription(
+              answer
+            );
+
 
           console.log(
             "Remote answer set"
@@ -208,7 +303,9 @@ function App() {
     );
 
 
-    // ================= ICE RECEIVED =================
+    // =================================================
+    // ICE CANDIDATE RECEIVED
+    // =================================================
 
     socket.current.on(
       "ice-candidate",
@@ -218,11 +315,14 @@ function App() {
           "ICE candidate received"
         );
 
+
         try {
 
-          await peerConnection.current.addIceCandidate(
-            candidate
-          );
+          await peerConnection.current
+            .addIceCandidate(
+              candidate
+            );
+
 
           console.log(
             "ICE candidate added"
@@ -241,16 +341,23 @@ function App() {
     );
 
 
-    // ================= CLEANUP =================
+    // =================================================
+    // CLEANUP
+    // =================================================
 
     return () => {
 
       if (socket.current) {
+
         socket.current.disconnect();
+
       }
 
+
       if (peerConnection.current) {
+
         peerConnection.current.close();
+
       }
 
     };
@@ -267,27 +374,37 @@ function App() {
     try {
 
       const stream =
-        await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true
-        });
+        await navigator.mediaDevices
+          .getUserMedia({
+            video: true,
+            audio: true
+          });
+
 
       console.log(
         "Camera started"
       );
+
 
       console.log(
         "Video tracks:",
         stream.getVideoTracks()
       );
 
+
       console.log(
         "Video track state:",
-        stream.getVideoTracks()[0].readyState
+        stream
+          .getVideoTracks()[0]
+          .readyState
       );
+
 
       localStream.current =
         stream;
+
+
+      // Show own video
 
       if (videoRef.current) {
 
@@ -302,21 +419,30 @@ function App() {
 
       }
 
+
       const videoTrack =
         stream.getVideoTracks()[0];
 
+
       const audioTrack =
         stream.getAudioTracks()[0];
+
+
+      // Add video track
 
       peerConnection.current.addTrack(
         videoTrack,
         stream
       );
 
+
+      // Add audio track
+
       peerConnection.current.addTrack(
         audioTrack,
         stream
       );
+
 
       console.log(
         "Camera and microphone added"
@@ -328,6 +454,7 @@ function App() {
         "Camera error:",
         error
       );
+
 
       alert(
         "Could not access camera or microphone."
@@ -348,19 +475,25 @@ function App() {
       return;
     }
 
+
     const audioTrack =
-      localStream.current.getAudioTracks()[0];
+      localStream.current
+        .getAudioTracks()[0];
+
 
     if (!audioTrack) {
       return;
     }
 
+
     audioTrack.enabled =
       !audioTrack.enabled;
+
 
     setMicOn(
       audioTrack.enabled
     );
+
 
     console.log(
       audioTrack.enabled
@@ -383,26 +516,34 @@ function App() {
         "Creating offer"
       );
 
+
       const offer =
-        await peerConnection.current.createOffer();
+        await peerConnection.current
+          .createOffer();
+
 
       console.log(
         "Offer created"
       );
 
-      await peerConnection.current.setLocalDescription(
-        offer
-      );
+
+      await peerConnection.current
+        .setLocalDescription(
+          offer
+        );
+
 
       console.log(
         "Local description set"
       );
+
 
       socket.current.emit(
         "offer",
         offer,
         roomIdRef.current
       );
+
 
       console.log(
         "Offer sent"
@@ -443,9 +584,11 @@ function App() {
     const newRoomId =
       generateRoomId();
 
+
     setRoomId(
       newRoomId
     );
+
 
     console.log(
       "Class created:",
@@ -468,26 +611,35 @@ function App() {
       );
 
       return;
+
     }
 
+
     const cleanRoomId =
-      roomId.trim().toUpperCase();
+      roomId
+        .trim()
+        .toUpperCase();
+
 
     roomIdRef.current =
       cleanRoomId;
+
 
     socket.current.emit(
       "join-room",
       cleanRoomId
     );
 
+
     setRoomId(
       cleanRoomId
     );
 
+
     setJoined(
       true
     );
+
 
     console.log(
       "Joined class:",
@@ -497,12 +649,19 @@ function App() {
   }
 
 
+  // =====================================================
+  // UI
+  // =====================================================
+
   return (
+
     <div className="app">
 
       {!joined ? (
 
-        /* ================= HOME PAGE ================= */
+        /* =================================================
+           HOME PAGE
+           ================================================= */
 
         <div className="home-page">
 
@@ -520,6 +679,7 @@ function App() {
 
             </div>
 
+
             <div className="nav-right">
               Secure • Simple • Reliable
             </div>
@@ -531,21 +691,30 @@ function App() {
 
             <section className="hero-section">
 
+
+              {/* HERO TEXT */}
+
               <div className="hero-text">
 
                 <p className="small-heading">
                   VIDEO MEETING PLATFORM
                 </p>
 
+
                 <h1>
+
                   Connect.
                   <br />
+
                   Communicate.
                   <br />
+
                   <span>
                     Collaborate.
                   </span>
+
                 </h1>
+
 
                 <p className="hero-description">
 
@@ -567,6 +736,7 @@ function App() {
                       Create a Class
                     </h2>
 
+
                     <p>
 
                       Start a new video meeting and invite
@@ -574,11 +744,14 @@ function App() {
 
                     </p>
 
+
                     <button
                       className="primary-btn"
                       onClick={createClass}
                     >
+
                       + Create Class
+
                     </button>
 
 
@@ -590,15 +763,19 @@ function App() {
                           Your Class Code
                         </span>
 
+
                         <strong>
                           {roomId}
                         </strong>
+
 
                         <button
                           className="join-created-btn"
                           onClick={joinClass}
                         >
+
                           Enter Class →
+
                         </button>
 
                       </div>
@@ -608,7 +785,7 @@ function App() {
                   </div>
 
 
-                  {/* OR */}
+                  {/* DIVIDER */}
 
                   <div className="divider">
 
@@ -627,12 +804,14 @@ function App() {
                       Join a Class
                     </h2>
 
+
                     <p>
 
                       Enter the class code shared by your
                       teacher or host.
 
                     </p>
+
 
                     <input
                       type="text"
@@ -646,11 +825,14 @@ function App() {
                       maxLength={6}
                     />
 
+
                     <button
                       className="secondary-btn"
                       onClick={joinClass}
                     >
+
                       Join Class →
+
                     </button>
 
                   </div>
@@ -681,6 +863,7 @@ function App() {
                       👩🏻
                     </div>
 
+
                     <div className="preview-name">
                       Ready to connect?
                     </div>
@@ -704,6 +887,7 @@ function App() {
                   🎥 HD Video
                 </div>
 
+
                 <div className="floating-card card-two">
                   🔒 Secure Meeting
                 </div>
@@ -721,6 +905,7 @@ function App() {
               © 2026 VideoMeet
             </span>
 
+
             <span>
               Built with WebRTC
             </span>
@@ -732,13 +917,14 @@ function App() {
 
       ) : (
 
-
-        /* ================= MEETING PAGE ================= */
+        /* =================================================
+           MEETING PAGE
+           ================================================= */
 
         <div className="meeting-page">
 
 
-          {/* ================= TOP BAR ================= */}
+          {/* TOP BAR */}
 
           <header className="meeting-header">
 
@@ -748,17 +934,20 @@ function App() {
                 ◉
               </div>
 
+
               <div className="meeting-info">
 
                 <h2>
                   VideoMeet
                 </h2>
 
+
                 <div className="meeting-code">
 
                   <span>
                     Class
                   </span>
+
 
                   <strong>
                     {roomId}
@@ -788,6 +977,7 @@ function App() {
                 ⓘ
               </button>
 
+
               <button className="header-btn">
                 ⋮
               </button>
@@ -797,12 +987,12 @@ function App() {
           </header>
 
 
-          {/* ================= MAIN MEETING AREA ================= */}
+          {/* MAIN MEETING */}
 
           <main className="meeting-main">
 
 
-            {/* ================= REMOTE VIDEO ================= */}
+            {/* REMOTE VIDEO */}
 
             <div className="remote-video-container">
 
@@ -816,16 +1006,19 @@ function App() {
                     "Remote video metadata loaded"
                   );
 
+
                   console.log(
                     "Remote video dimensions:",
                     remoteVideoRef.current?.videoWidth,
                     remoteVideoRef.current?.videoHeight
                   );
 
+
                   console.log(
                     "Remote video readyState:",
                     remoteVideoRef.current?.readyState
                   );
+
 
                   console.log(
                     "Remote video paused:",
@@ -836,7 +1029,7 @@ function App() {
               />
 
 
-              {/* WAITING STATE */}
+              {/* WAITING SCREEN */}
 
               {!remoteConnected && (
 
@@ -846,9 +1039,11 @@ function App() {
                     👤
                   </div>
 
+
                   <h3>
                     Waiting for someone to join
                   </h3>
+
 
                   <p>
 
@@ -862,13 +1057,14 @@ function App() {
               )}
 
 
-              {/* PARTICIPANT INFORMATION */}
+              {/* PARTICIPANT INFO */}
 
               <div className="participant-info">
 
                 <span className="participant-mic">
                   🎤
                 </span>
+
 
                 <span>
                   Participant
@@ -879,7 +1075,7 @@ function App() {
             </div>
 
 
-            {/* ================= MY VIDEO ================= */}
+            {/* MY VIDEO */}
 
             <div className="my-video-container">
 
@@ -890,6 +1086,7 @@ function App() {
                 muted
               />
 
+
               <div className="my-video-name">
                 You
               </div>
@@ -897,7 +1094,7 @@ function App() {
             </div>
 
 
-            {/* ================= DEVELOPMENT BUTTONS ================= */}
+            {/* DEVELOPMENT BUTTONS */}
 
             <div className="development-controls">
 
@@ -905,23 +1102,27 @@ function App() {
                 className="dev-camera-btn"
                 onClick={startCamera}
               >
+
                 Start Camera
+
               </button>
+
 
               <button
                 className="dev-call-btn"
                 onClick={startCall}
               >
+
                 Start Call
+
               </button>
 
             </div>
 
-
           </main>
 
 
-          {/* ================= BOTTOM CONTROLS ================= */}
+          {/* BOTTOM CONTROLS */}
 
           <footer className="meeting-controls">
 
@@ -944,6 +1145,7 @@ function App() {
 
                 </span>
 
+
                 <span className="control-label">
 
                   {micOn
@@ -963,6 +1165,7 @@ function App() {
                   📹
                 </span>
 
+
                 <span className="control-label">
                   Camera
                 </span>
@@ -977,6 +1180,7 @@ function App() {
                 <span className="control-icon">
                   🖥️
                 </span>
+
 
                 <span className="control-label">
                   Share
@@ -993,6 +1197,7 @@ function App() {
                   👥
                 </span>
 
+
                 <span className="control-label">
                   People
                 </span>
@@ -1008,6 +1213,7 @@ function App() {
                   💬
                 </span>
 
+
                 <span className="control-label">
                   Chat
                 </span>
@@ -1022,6 +1228,7 @@ function App() {
                 <span className="control-icon">
                   ⋯
                 </span>
+
 
                 <span className="control-label">
                   More
@@ -1040,12 +1247,12 @@ function App() {
                 ☎
               </span>
 
+
               <span>
                 Leave
               </span>
 
             </button>
-
 
           </footer>
 
@@ -1054,7 +1261,9 @@ function App() {
       )}
 
     </div>
+
   );
+
 }
 
 export default App;
