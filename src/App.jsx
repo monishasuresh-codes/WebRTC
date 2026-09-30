@@ -173,51 +173,169 @@ function joinClass() {
 }
 
 return (
-  <div>
+  <div className="app">
 
-    <h1>Video Meet</h1>
+    {!joined ? (
+      <div className="home-page">
 
-    {!joined && (
-      <div>
-
-        <h2>Create a Class</h2>
-
-        <button onClick={createClass}>
-          Create Class
-        </button>
-
-        {roomId && (
-          <div>
-            <p>Your Class Code:</p>
-
-            <h2>{roomId}</h2>
-
-            <button onClick={joinClass}>
-              Join This Class
-            </button>
+        <nav className="navbar">
+          <div className="logo">
+            <span className="logo-icon">◉</span>
+            <span>VideoMeet</span>
           </div>
-        )}
 
-        <hr />
+          <div className="nav-right">
+            <span>Secure • Simple • Reliable</span>
+          </div>
+        </nav>
 
-        <h2>Join a Class</h2>
+        <main className="home-content">
 
-        <input
-          type="text"
-          placeholder="Enter class code"
-          value={roomId}
-          onChange={(e) => setRoomId(e.target.value)}
-        />
+          <section className="hero-section">
 
-        <button onClick={joinClass}>
-          Join Class
-        </button>
+            <div className="hero-text">
+              <p className="small-heading">
+                VIDEO MEETING PLATFORM
+              </p>
+
+              <h1>
+                Connect.
+                <br />
+                Communicate.
+                <br />
+                <span>Collaborate.</span>
+              </h1>
+
+              <p className="hero-description">
+                Start or join a video meeting instantly.
+                No complicated setup. Just share the class
+                code and connect.
+              </p>
+
+              <div className="action-area">
+
+                <div className="create-box">
+                  <h2>Create a Class</h2>
+
+                  <p>
+                    Start a new video meeting and invite
+                    others using your class code.
+                  </p>
+
+                  <button
+                    className="primary-btn"
+                    onClick={createClass}
+                  >
+                    + Create Class
+                  </button>
+
+                  {roomId && (
+                    <div className="class-code-box">
+
+                      <span>Your Class Code</span>
+
+                      <strong>{roomId}</strong>
+
+                      <button
+                        className="join-created-btn"
+                        onClick={joinClass}
+                      >
+                        Enter Class →
+                      </button>
+
+                    </div>
+                  )}
+                </div>
+
+                <div className="divider">
+                  <span>OR</span>
+                </div>
+
+                <div className="join-box">
+                  <h2>Join a Class</h2>
+
+                  <p>
+                    Enter the class code shared by your
+                    teacher or host.
+                  </p>
+
+                  <input
+                    type="text"
+                    placeholder="Enter class code"
+                    value={roomId}
+                    onChange={(e) =>
+                      setRoomId(e.target.value.toUpperCase())
+                    }
+                    maxLength={6}
+                  />
+
+                  <button
+                    className="secondary-btn"
+                    onClick={joinClass}
+                  >
+                    Join Class →
+                  </button>
+
+                </div>
+
+              </div>
+            </div>
+
+            <div className="hero-visual">
+
+              <div className="video-preview">
+
+                <div className="preview-header">
+                  <span className="live-dot"></span>
+                  VideoMeet
+                </div>
+
+                <div className="preview-screen">
+
+                  <div className="person-circle">
+                    👩🏻
+                  </div>
+
+                  <div className="preview-name">
+                    Ready to connect?
+                  </div>
+
+                </div>
+
+                <div className="preview-controls">
+                  <div>🎤</div>
+                  <div>📹</div>
+                  <div>💬</div>
+                  <div>👥</div>
+                </div>
+
+              </div>
+
+              <div className="floating-card card-one">
+                🎥 HD Video
+              </div>
+
+              <div className="floating-card card-two">
+                🔒 Secure Meeting
+              </div>
+
+            </div>
+
+          </section>
+
+        </main>
+
+        <footer className="home-footer">
+          <span>© 2026 VideoMeet</span>
+          <span>Built with WebRTC</span>
+        </footer>
 
       </div>
-    )}
 
-    {joined && (
-      <div>
+    ) : (
+
+      /* Meeting UI will be designed next */
+      <div className="meeting-page">
 
         <h2>Class: {roomId}</h2>
 
