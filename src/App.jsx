@@ -32,13 +32,8 @@ function App() {
         iceServers: [
           {
             urls: "stun:stun.l.google.com:19302"
-          },
-          {
-    urls: "YOUR_TURN_SERVER",
-    username: "YOUR_USERNAME",
-    credential: "YOUR_PASSWORD"
-  }
-          
+          }
+           
         ]
       });
 
