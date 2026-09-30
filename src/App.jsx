@@ -176,24 +176,31 @@ return (
   <div className="app">
 
     {!joined ? (
+
+      /* ================= HOME PAGE ================= */
+
       <div className="home-page">
 
         <nav className="navbar">
+
           <div className="logo">
             <span className="logo-icon">◉</span>
             <span>VideoMeet</span>
           </div>
 
           <div className="nav-right">
-            <span>Secure • Simple • Reliable</span>
+            Secure • Simple • Reliable
           </div>
+
         </nav>
+
 
         <main className="home-content">
 
           <section className="hero-section">
 
             <div className="hero-text">
+
               <p className="small-heading">
                 VIDEO MEETING PLATFORM
               </p>
@@ -208,13 +215,15 @@ return (
 
               <p className="hero-description">
                 Start or join a video meeting instantly.
-                No complicated setup. Just share the class
-                code and connect.
+                Share a class code and connect with others
+                from anywhere.
               </p>
+
 
               <div className="action-area">
 
                 <div className="create-box">
+
                   <h2>Create a Class</h2>
 
                   <p>
@@ -229,7 +238,9 @@ return (
                     + Create Class
                   </button>
 
+
                   {roomId && (
+
                     <div className="class-code-box">
 
                       <span>Your Class Code</span>
@@ -244,14 +255,19 @@ return (
                       </button>
 
                     </div>
+
                   )}
+
                 </div>
+
 
                 <div className="divider">
                   <span>OR</span>
                 </div>
 
+
                 <div className="join-box">
+
                   <h2>Join a Class</h2>
 
                   <p>
@@ -264,7 +280,9 @@ return (
                     placeholder="Enter class code"
                     value={roomId}
                     onChange={(e) =>
-                      setRoomId(e.target.value.toUpperCase())
+                      setRoomId(
+                        e.target.value.toUpperCase()
+                      )
                     }
                     maxLength={6}
                   />
@@ -279,16 +297,22 @@ return (
                 </div>
 
               </div>
+
             </div>
+
 
             <div className="hero-visual">
 
               <div className="video-preview">
 
                 <div className="preview-header">
+
                   <span className="live-dot"></span>
+
                   VideoMeet
+
                 </div>
+
 
                 <div className="preview-screen">
 
@@ -302,14 +326,18 @@ return (
 
                 </div>
 
+
                 <div className="preview-controls">
+
                   <div>🎤</div>
                   <div>📹</div>
                   <div>💬</div>
                   <div>👥</div>
+
                 </div>
 
               </div>
+
 
               <div className="floating-card card-one">
                 🎥 HD Video
@@ -325,49 +353,289 @@ return (
 
         </main>
 
+
         <footer className="home-footer">
-          <span>© 2026 VideoMeet</span>
-          <span>Built with WebRTC</span>
+
+          <span>
+            © 2026 VideoMeet
+          </span>
+
+          <span>
+            Built with WebRTC
+          </span>
+
         </footer>
 
       </div>
 
+
     ) : (
 
-      /* Meeting UI will be designed next */
+      /* ================= MEETING PAGE ================= */
+
       <div className="meeting-page">
 
-        <h2>Class: {roomId}</h2>
 
-        <button onClick={startCamera}>
-          Start Camera
-        </button>
+        {/* ================= TOP BAR ================= */}
 
-        <button onClick={startCall}>
-          Start Call
-        </button>
+        <header className="meeting-header">
 
-        <div>
-          <h2>My Video</h2>
+          <div className="meeting-left">
 
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-          />
-        </div>
+            <div className="meeting-logo">
+              ◉
+            </div>
 
-        <div>
-          <h2>Remote Video</h2>
+            <div className="meeting-info">
 
-          <video
-            ref={remoteVideoRef}
-            autoPlay
-            playsInline
-          />
-        </div>
+              <h2>
+                VideoMeet
+              </h2>
+
+              <div className="meeting-code">
+
+                <span>
+                  Class
+                </span>
+
+                <strong>
+                  {roomId}
+                </strong>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <div className="meeting-right">
+
+            <div className="connection-status">
+
+              <span className="status-dot"></span>
+
+              <span>
+                Connected
+              </span>
+
+            </div>
+
+
+            <button className="header-btn">
+              ⓘ
+            </button>
+
+            <button className="header-btn">
+              ⋮
+            </button>
+
+          </div>
+
+        </header>
+
+
+        {/* ================= MAIN MEETING AREA ================= */}
+
+        <main className="meeting-main">
+
+
+          {/* REMOTE VIDEO */}
+
+          <div className="remote-video-container">
+
+            <video
+              ref={remoteVideoRef}
+              autoPlay
+              playsInline
+            />
+
+
+            {/* WAITING STATE */}
+
+            <div className="waiting-state">
+
+              <div className="waiting-avatar">
+                👤
+              </div>
+
+              <h3>
+                Waiting for someone to join
+              </h3>
+
+              <p>
+                Share the class code with another
+                participant.
+              </p>
+
+            </div>
+
+
+            {/* PARTICIPANT INFORMATION */}
+
+            <div className="participant-info">
+
+              <span className="participant-mic">
+                🎤
+              </span>
+
+              <span>
+                Participant
+              </span>
+
+            </div>
+
+          </div>
+
+
+          {/* MY VIDEO */}
+
+          <div className="my-video-container">
+
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+            />
+
+            <div className="my-video-name">
+              You
+            </div>
+
+          </div>
+
+
+          {/* TEMPORARY DEVELOPMENT BUTTONS */}
+
+          <div className="development-controls">
+
+            <button
+              className="dev-camera-btn"
+              onClick={startCamera}
+            >
+              Start Camera
+            </button>
+
+            <button
+              className="dev-call-btn"
+              onClick={startCall}
+            >
+              Start Call
+            </button>
+
+          </div>
+
+
+        </main>
+
+
+        {/* ================= BOTTOM CONTROLS ================= */}
+
+        <footer className="meeting-controls">
+
+
+          <div className="controls-left">
+
+            <button className="control-btn">
+
+              <span className="control-icon">
+                🎤
+              </span>
+
+              <span className="control-label">
+                Mic
+              </span>
+
+            </button>
+
+
+            <button className="control-btn">
+
+              <span className="control-icon">
+                📹
+              </span>
+
+              <span className="control-label">
+                Camera
+              </span>
+
+            </button>
+
+
+            <button className="control-btn">
+
+              <span className="control-icon">
+                🖥️
+              </span>
+
+              <span className="control-label">
+                Share
+              </span>
+
+            </button>
+
+
+            <button className="control-btn">
+
+              <span className="control-icon">
+                👥
+              </span>
+
+              <span className="control-label">
+                People
+              </span>
+
+            </button>
+
+
+            <button className="control-btn">
+
+              <span className="control-icon">
+                💬
+              </span>
+
+              <span className="control-label">
+                Chat
+              </span>
+
+            </button>
+
+
+            <button className="control-btn">
+
+              <span className="control-icon">
+                ⋯
+              </span>
+
+              <span className="control-label">
+                More
+              </span>
+
+            </button>
+
+          </div>
+
+
+          {/* LEAVE BUTTON */}
+
+          <button className="leave-btn">
+
+            <span>
+              ☎
+            </span>
+
+            <span>
+              Leave
+            </span>
+
+          </button>
+
+
+        </footer>
 
       </div>
+
     )}
 
   </div>
