@@ -12,7 +12,13 @@ function App() {
   const roomIdRef = useRef("");
 
   useEffect(() => {
-    peerConnection.current = new RTCPeerConnection();
+    peerConnection.current = new RTCPeerConnection({
+  iceServers: [
+    {
+      urls: "stun:stun.l.google.com:19302"
+    }
+  ]
+});
     socket.current = io("https://webrtc-gkeo.onrender.com");
     socket.current.on("connect", () => {
       console.log(
