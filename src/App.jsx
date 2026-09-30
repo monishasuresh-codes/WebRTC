@@ -9,7 +9,11 @@ function App() {
   const socket = useRef(null);
   const [roomId, setRoomId] = useState("");
   const [joined, setJoined] = useState(false);
+  const [micOn, setMicOn] = useState(true);
+
   const roomIdRef = useRef("");
+
+  const localStream = useRef(null);
 
   useEffect(() => {
     peerConnection.current = new RTCPeerConnection({
@@ -113,6 +117,8 @@ async function startCamera() {
   console.log("Video tracks:", stream.getVideoTracks());
   console.log("Video track state:", stream.getVideoTracks()[0].readyState);
 
+  localStream.current = stream;
+
   videoRef.current.srcObject = stream;
 
   await videoRef.current.play();
@@ -127,6 +133,29 @@ async function startCamera() {
 
   console.log("Camera and microphone added");
 }
+function toggleMic() {
+  if (!localStream.current) {
+    return;
+  }
+
+  const audioTrack = localStream.current.getAudioTracks()[0];
+
+  if (!audioTrack) {
+    return;
+  }
+
+  audioTrack.enabled = !audioTrack.enabled;
+
+  setMicOn(audioTrack.enabled);
+
+  console.log(
+    audioTrack.enabled
+      ? "Microphone ON"
+      : "Microphone OFF"
+  );
+}
+
+
   async function startCall() {
     console.log("Creating offer");
     const offer =
@@ -537,17 +566,20 @@ return (
 
           <div className="controls-left">
 
-            <button className="control-btn">
+            <button
+  className="control-btn"
+  onClick={toggleMic}
+>
 
-              <span className="control-icon">
-                🎤
-              </span>
+  <span className="control-icon">
+    {micOn ? "🎤" : "🔇"}
+  </span>
 
-              <span className="control-label">
-                Mic
-              </span>
+  <span className="control-label">
+    {micOn ? "Mute" : "Unmute"}
+  </span>
 
-            </button>
+</button>
 
 
             <button className="control-btn">
