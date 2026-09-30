@@ -31,7 +31,7 @@ peerConnection.current.oniceconnectionstatechange = () => {
 };
 
 socket.current = io("https://webrtc-gkeo.onrender.com");
-    socket.current = io("https://webrtc-gkeo.onrender.com");
+    
     socket.current.on("connect", () => {
       console.log(
         "Connected to server:",
