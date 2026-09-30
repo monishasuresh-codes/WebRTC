@@ -51,38 +51,69 @@ function App() {
     // ================= REMOTE TRACK =================
 
     peerConnection.current.ontrack = (event) => {
+
       console.log("Remote track received");
+
+      const remoteStream = event.streams[0];
 
       console.log(
         "Remote stream:",
-        event.streams[0]
+        remoteStream
       );
 
       console.log(
         "Remote tracks:",
-        event.streams[0].getTracks()
+        remoteStream.getTracks()
       );
+
+      remoteStream.getTracks().forEach((track) => {
+
+        console.log(
+          "Remote track:",
+          track.kind,
+          "readyState:",
+          track.readyState,
+          "enabled:",
+          track.enabled
+        );
+
+      });
 
       if (remoteVideoRef.current) {
 
         remoteVideoRef.current.srcObject =
-          event.streams[0];
+          remoteStream;
 
         setRemoteConnected(true);
 
         remoteVideoRef.current
           .play()
           .then(() => {
-            console.log("Remote video playing");
+
+            console.log(
+              "Remote video playing"
+            );
+
+            console.log(
+              "Video dimensions after play:",
+              remoteVideoRef.current.videoWidth,
+              remoteVideoRef.current.videoHeight
+            );
+
           })
           .catch((error) => {
+
             console.error(
               "Remote video play error:",
               error
             );
+
           });
+
       }
+
     };
+
 
     // ================= ICE CANDIDATE =================
 
@@ -90,15 +121,20 @@ function App() {
 
       if (event.candidate) {
 
-        console.log("ICE candidate found");
+        console.log(
+          "ICE candidate found"
+        );
 
         socket.current.emit(
           "ice-candidate",
           event.candidate,
           roomIdRef.current
         );
+
       }
+
     };
+
 
     // ================= OFFER =================
 
@@ -138,8 +174,10 @@ function App() {
           answer,
           roomIdRef.current
         );
+
       }
     );
+
 
     // ================= ANSWER =================
 
@@ -163,9 +201,12 @@ function App() {
           console.log(
             "Remote answer set"
           );
+
         }
+
       }
     );
+
 
     // ================= ICE RECEIVED =================
 
@@ -193,9 +234,12 @@ function App() {
             "Error adding ICE candidate:",
             error
           );
+
         }
+
       }
     );
+
 
     // ================= CLEANUP =================
 
@@ -208,6 +252,7 @@ function App() {
       if (peerConnection.current) {
         peerConnection.current.close();
       }
+
     };
 
   }, []);
@@ -227,7 +272,9 @@ function App() {
           audio: true
         });
 
-      console.log("Camera started");
+      console.log(
+        "Camera started"
+      );
 
       console.log(
         "Video tracks:",
@@ -239,7 +286,8 @@ function App() {
         stream.getVideoTracks()[0].readyState
       );
 
-      localStream.current = stream;
+      localStream.current =
+        stream;
 
       if (videoRef.current) {
 
@@ -251,6 +299,7 @@ function App() {
         console.log(
           "Video playing"
         );
+
       }
 
       const videoTrack =
@@ -283,7 +332,9 @@ function App() {
       alert(
         "Could not access camera or microphone."
       );
+
     }
+
   }
 
 
@@ -316,6 +367,7 @@ function App() {
         ? "Microphone ON"
         : "Microphone OFF"
     );
+
   }
 
 
@@ -362,7 +414,9 @@ function App() {
         "Start call error:",
         error
       );
+
     }
+
   }
 
 
@@ -376,6 +430,7 @@ function App() {
       .toString(36)
       .substring(2, 8)
       .toUpperCase();
+
   }
 
 
@@ -396,6 +451,7 @@ function App() {
       "Class created:",
       newRoomId
     );
+
   }
 
 
@@ -437,6 +493,7 @@ function App() {
       "Joined class:",
       cleanRoomId
     );
+
   }
 
 
@@ -501,6 +558,7 @@ function App() {
 
                 <div className="action-area">
 
+
                   {/* CREATE CLASS */}
 
                   <div className="create-box">
@@ -550,10 +608,14 @@ function App() {
                   </div>
 
 
+                  {/* OR */}
+
                   <div className="divider">
+
                     <span>
                       OR
                     </span>
+
                   </div>
 
 
@@ -670,6 +732,7 @@ function App() {
 
       ) : (
 
+
         /* ================= MEETING PAGE ================= */
 
         <div className="meeting-page">
@@ -757,6 +820,16 @@ function App() {
                     "Remote video dimensions:",
                     remoteVideoRef.current?.videoWidth,
                     remoteVideoRef.current?.videoHeight
+                  );
+
+                  console.log(
+                    "Remote video readyState:",
+                    remoteVideoRef.current?.readyState
+                  );
+
+                  console.log(
+                    "Remote video paused:",
+                    remoteVideoRef.current?.paused
                   );
 
                 }}
@@ -897,7 +970,7 @@ function App() {
               </button>
 
 
-              {/* SCREEN SHARE */}
+              {/* SHARE */}
 
               <button className="control-btn">
 
