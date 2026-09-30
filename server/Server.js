@@ -13,7 +13,8 @@ const io = new Server(server, {
     "http://localhost:5174",
     "https://localhost:5174",
     "http://192.168.0.111:5174",
-    "https://192.168.0.111:5174"
+    "https://192.168.0.111:5174",
+    "https://web-rtc-rho-eight.vercel.app"
   ]
 }
 });
