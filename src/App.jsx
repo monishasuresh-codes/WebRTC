@@ -15,7 +15,6 @@ function App() {
   const [micOn, setMicOn] = useState(true);
   const [remoteConnected, setRemoteConnected] = useState(false);
   const [cameraOn, setCameraOn] = useState(true);
-  const [screenSharing, setScreenSharing] = useState(false);
 
   const roomIdRef = useRef("");
   const localStream = useRef(null);
@@ -527,102 +526,6 @@ function App() {
       ? "Camera ON"
       : "Camera OFF"
   );
-}
-async function toggleScreenShare() {
-  if (!localStream.current || !peerConnection.current) {
-    return;
-  }
-
-  try {
-    if (!screenSharing) {
-      const screenStream =
-        await navigator.mediaDevices.getDisplayMedia({
-          video: true
-        });
-
-      const screenTrack =
-        screenStream.getVideoTracks()[0];
-
-      const sender =
-        peerConnection.current
-          .getSenders()
-          .find(
-            (sender) =>
-              sender.track &&
-              sender.track.kind === "video"
-          );
-
-      if (!sender) {
-        console.log("Video sender not found");
-        return;
-      }
-
-      // Replace camera with screen
-      await sender.replaceTrack(screenTrack);
-
-      // Show screen locally
-      if (videoRef.current) {
-        videoRef.current.srcObject = screenStream;
-      }
-
-      setScreenSharing(true);
-
-      console.log("Screen sharing started");
-
-      screenTrack.onended = async () => {
-        await stopScreenShare();
-      };
-
-    } else {
-      await stopScreenShare();
-    }
-
-  } catch (error) {
-    console.error("Screen sharing error:", error);
-  }
-}
-
-async function stopScreenShare() {
-  if (!localStream.current || !peerConnection.current) {
-    return;
-  }
-
-  try {
-    const cameraTrack =
-      localStream.current.getVideoTracks()[0];
-
-    const sender =
-      peerConnection.current
-        .getSenders()
-        .find(
-          (sender) =>
-            sender.track &&
-            sender.track.kind === "video"
-        );
-
-    if (!sender || !cameraTrack) {
-      return;
-    }
-
-    // Replace screen with camera
-    await sender.replaceTrack(cameraTrack);
-
-    // Show camera locally again
-    if (videoRef.current) {
-      videoRef.current.srcObject =
-        localStream.current;
-    }
-
-    setScreenSharing(false);
-
-    console.log("Screen sharing stopped");
-
-  } catch (error) {
-    console.error(
-      "Error stopping screen share:",
-      error
-    );
-  }
 }
 
 
@@ -1301,24 +1204,7 @@ async function stopScreenShare() {
 
               {/* SHARE */}
 
-              <button className="control-btn" onClick={
-    screenSharing
-      ? stopScreenShare
-      : toggleScreenShare
-  }>
-
-                <span className="control-icon">
-                  {screenSharing ? "🛑" : "🖥️"}
-                </span>
-
-
-                <span className="control-label">
-                  {screenSharing
-                    ? "Control-On"
-                    : "Off"}
-                </span>
-
-              </button>
+              
 
 
               {/* PEOPLE */}
